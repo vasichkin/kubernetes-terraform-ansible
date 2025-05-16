@@ -47,11 +47,12 @@ In project root folder:
 1. Check deployed hosts are accessible
 ```ansible k8s_cluster -i ../dynamic_inventory.py -m ping --ssh-common-args="-o StrictHostKeyChecking=no"```
 
-2. `ansible-playbook -i dynamic_inventory.py playbooks/kube-dependencies.yml`
-3. `ansible-playbook -i dynamic_inventory.py playbooks/master.yml`
-4. `ansible-playbook -i dynamic_inventory.py playbooks/workers.yml`
-5. ssh to master nodem verify cluster - `kubectl get nodes`
-6. get ~/.kube/config from mster node
+2. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/kube-dependencies.yml`
+3. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/master.yml`
+4. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/workers.yml`
+6. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/fetch_config.yml`
+7. Check cluster accessible `kubectl --kubeconfig kubeconfigs/config get nodes`
+8. Copy kubeconfigs/config to ~/.kube/config and you are done.
 
 
 # Delete

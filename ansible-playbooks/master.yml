@@ -7,6 +7,14 @@
         dest: /etc/kubernetes/kubeadm-config.yaml
         force: no
 
+    - name: Get public IP
+      ansible.builtin.shell: "curl -s https://checkip.amazonaws.com"
+      register: public_ip
+
+    - name: Show external IP
+      ansible.builtin.debug:
+        msg: "Kubernetes Master IP: {{ public_ip.stdout }}"
+
     - name: configuring the container runtime including its cgroup driver
       blockinfile:
         path: /etc/kubernetes/kubeadm-config.yaml
@@ -15,6 +23,11 @@
              apiVersion: kubeadm.k8s.io/v1beta3
              networking:
                podSubnet: "10.244.0.0/16"
+             apiServer:
+               certSANs:
+                 - 127.0.0.1
+                 - {{ public_ip.stdout }}
+                 - your.domain.here
              ---
              kind: KubeletConfiguration
              apiVersion: kubelet.config.k8s.io/v1beta1
@@ -29,8 +42,10 @@
              enforceNodeAllocatable:
              - pods
 
+
+
     - name: initialize the cluster (this could take some time)
-      shell: kubeadm init --config /etc/kubernetes/kubeadm-config.yaml >> cluster_initialized.log
+      shell: "kubeadm init --config /etc/kubernetes/kubeadm-config.yaml >> cluster_initialized.log"
       args:
         chdir: /home/ubuntu
         creates: cluster_initialized.log

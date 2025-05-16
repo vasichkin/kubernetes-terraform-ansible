@@ -1,0 +1,9 @@
+# Import play books
+- name: Install Kubernetes Dependencies
+  import_playbook: ansible-playbooks/kube-dependencies.yml
+- name: Initialaize Kubernetes Master
+  import_playbook: ansible-playbooks/master.yml
+- name: Initialaize Kubernetes Workers
+  import_playbook: ansible-playbooks/workers.yml
+- name: Fetch kubernetes Config to ./kubeconfigs/
+  import_playbook: ansible-playbooks/fetch_config.yml

@@ -1,0 +1,24 @@
+- name: Copy kubeconfig and update server IP
+  hosts: k8s_master
+  gather_facts: yes
+  tasks:
+    - name: Get public IP
+      ansible.builtin.shell: "curl -s https://checkip.amazonaws.com"
+      register: master_public_ip
+
+    - name: Show external IP
+      ansible.builtin.debug:
+        msg: "Kubernetes Master IP: {{ master_public_ip.stdout }}"
+
+    - name: Fetch kubeconfig from remote host
+      ansible.builtin.fetch:
+        src: /home/ubuntu/.kube/config
+        dest: ../kubeconfigs/config
+        flat: yes
+
+    - name: Replace server IP in kubeconfig with public IP
+      ansible.builtin.replace:
+        path: ../kubeconfigs/config
+        regexp: 'server: https://[^\s:]+:6443'
+        replace: 'server: https://{{ master_public_ip.stdout }}:6443'
+      delegate_to: localhost
