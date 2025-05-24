@@ -15,6 +15,29 @@
       ansible.builtin.debug:
         msg: "Kubernetes Master IP: {{ public_ip.stdout }}"
 
+    - name: Run nslookup on the public IP
+      command: "nslookup -type=ptr {{ public_ip.stdout }}"
+      register: nslookup_output
+      retries: 3
+      delay: 2
+      until: nslookup_output.rc == 0 and ('name = ' in nslookup_output.stdout)
+
+    - name: Show nslookup output
+      debug:
+        msg: "nslookup {{ nslookup_output.stdout }}"
+
+    - name: Extract hostname from nslookup output (PTR record)
+      set_fact:
+        ptr_records: "{{ nslookup_output.stdout | regex_findall('name = ([\\w\\-\\.]+)\\.') }}"
+
+    - name: Set public_dns if PTR record exists
+      set_fact:
+        public_dns: "{{ ptr_records[0] if ptr_records | length > 0 else 'not found' }}"
+
+    - name: Show resolved DNS
+      debug:
+        msg: "Resolved DNS for {{ public_ip.stdout }} is {{ public_dns }}"
+
     - name: configuring the container runtime including its cgroup driver
       blockinfile:
         path: /etc/kubernetes/kubeadm-config.yaml
@@ -23,10 +46,14 @@
              apiVersion: kubeadm.k8s.io/v1beta3
              networking:
                podSubnet: "10.244.0.0/16"
+               # To be able to add loadbalancer later
+               control-plane-endpoint: {{ public_ip.stdout }} {{ public_dns }}
              apiServer:
+               allow-privileged: true
                certSANs:
                  - 127.0.0.1
                  - {{ public_ip.stdout }}
+                 - {{ public_dns }}
                  - your.domain.here
              ---
              kind: KubeletConfiguration
@@ -41,6 +68,7 @@
                memory: 50M
              enforceNodeAllocatable:
              - pods
+             masterTaints: []
 
 
 

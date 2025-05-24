@@ -141,6 +141,16 @@
         name: net.ipv4.ip_forward
         value: 1
 
+    - name: install python3-kubernetes
+      apt:
+        name: python3-kubernetes
+        state: present
+
+    - name: install jq
+      apt:
+        name: jq
+        state: present
+
     - name: reboot and wait for reboot to complete
       reboot:
 

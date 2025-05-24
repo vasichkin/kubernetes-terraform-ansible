@@ -44,6 +44,10 @@ variable "k8s_master_instance_type" {
   type    = string
   default = "t2.medium"
 }
+variable "k8s_worker_instance_count" {
+  type    = string
+  default = 2
+}
 variable "ports" {
   type    = list(number)
   default = [ 22, 80, 443 ]
