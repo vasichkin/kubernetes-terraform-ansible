@@ -6,9 +6,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket    = var.aws_s3_bucket
+    bucket    = "capstone-terraform-state"
     key       = "terraform/state"
-    region    = var.aws_region
+    region    = "eu-north-1"
     use_lockfile = true
   }
 }
