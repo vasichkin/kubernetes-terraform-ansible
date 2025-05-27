@@ -5,6 +5,12 @@ terraform {
       version = "5.19.0"
     }
   }
+  backend "s3" {
+    bucket    = var.aws_s3_bucket
+    key       = "terraform/state"
+    region    = var.aws_region
+    use_lockfile = true
+  }
 }
 
 provider "aws" {

@@ -1,6 +1,7 @@
 aws_access_key           = "AWS_ACCESS_KEY"
 aws_secret_key           = "AWS_SECRET_KEY"
 aws_region               = "eu-north-1"
+aws_s3_bucket            = "capstone-terraform-state"
 azs                      = ["eu-north-1b", "eu-north-1c"]
 vpc_cidr_block           = "10.0.0.0/16"
 private_subnets          = ["10.0.1.0/24", "10.0.2.0/24"]

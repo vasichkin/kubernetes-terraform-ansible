@@ -14,6 +14,9 @@ variable "aws_secret_key" {
 variable "aws_region" {
   type = string
 }
+variable "aws_s3_bucket" {
+  type = string
+}
 variable "vpc_cidr_block" {
   description = "CIDR (Classless Inter-Domain Routing)."
   type        = string
