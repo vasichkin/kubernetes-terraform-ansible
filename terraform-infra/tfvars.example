@@ -15,7 +15,7 @@ k8s_worker_instance_type = "t3.medium"
 ports                    = ["22", "80", "6443", "30001", "30002", "30080"]
 
 tags = {
-  Owner    = ${OWNER}
+  Owner    = "${OWNER}"
   Project  = "capstone"
   Function = "k8s_cluster"
 }
