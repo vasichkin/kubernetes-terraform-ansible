@@ -7,7 +7,7 @@ terraform {
   }
   backend "s3" {
     bucket    = "capstone-terraform-state"
-    key       = "terraform/state"
+    key       = "terraform/aws-infra-state"
     region    = "eu-north-1"
     use_lockfile = true
   }
