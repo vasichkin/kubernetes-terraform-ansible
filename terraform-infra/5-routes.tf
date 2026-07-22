@@ -9,6 +9,7 @@ resource "aws_route_table" "private" {
     var.tags,
     {
       Name = "${var.env}-private"
+      Role = "networking"
     }
   )
 }
@@ -24,6 +25,7 @@ resource "aws_route_table" "public" {
     var.tags,
     {
       Name = "${var.env}-public"
+      Role = "networking"
     }
   )
 }

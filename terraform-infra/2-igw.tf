@@ -5,6 +5,7 @@ resource "aws_internet_gateway" "this" {
     var.tags,
     {
       Name = "${var.env}-igw"
+      Role = "networking"
     }
   )
 }

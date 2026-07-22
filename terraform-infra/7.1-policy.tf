@@ -4,6 +4,7 @@ resource "aws_iam_policy" "ec2-instance-access" {
     var.tags,
     {
       Name = "${var.env}-instance-policy"
+      Role = "iam"
     }
   )
   description = "Allow EC2 instance to access resources"

@@ -5,16 +5,13 @@ terraform {
       version = "5.19.0"
     }
   }
+  # bucket/region are supplied at `terraform init` time via -backend-config
+  # (see backend.hcl.example) since backend blocks cannot read variables or tfvars.
   backend "s3" {
-    bucket    = "capstone-terraform-state"
-    key       = "terraform/aws-infra-state"
-    region    = "eu-north-1"
-    use_lockfile = true
+    key = "terraform/aws-infra-state"
   }
 }
 
 provider "aws" {
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
-  region     = var.aws_region
+  region = var.aws_region
 }

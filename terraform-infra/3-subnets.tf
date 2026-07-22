@@ -9,6 +9,7 @@ resource "aws_subnet" "private" {
     var.tags,
     {
       Name = "${var.env}-private-${var.azs[count.index]}"
+      Role = "networking"
       # var.private_subnet_tags
     }
   )
@@ -26,6 +27,7 @@ resource "aws_subnet" "public" {
     var.tags,
     {
       Name = "${var.env}-public-${var.azs[count.index]}"
+      Role = "networking"
       #var.public_subnet_tags
     }
   )

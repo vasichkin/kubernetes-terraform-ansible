@@ -2,10 +2,15 @@
 
 import boto3
 import json
+import os
 import sys
 
-# Tag filter for selecting relevant EC2 instances
-k8s_deployment_tag = {"Project": "capstone", "Function": "k8s_cluster"}
+# Tag filter for selecting relevant EC2 instances. Must match tags.Project/tags.Function in
+# terraform.tfvars - override with K8S_TAG_PROJECT/K8S_TAG_FUNCTION if tfvars diverges from these defaults.
+k8s_deployment_tag = {
+    "Project": os.environ.get("K8S_TAG_PROJECT", "Experiment_kuber"),
+    "Function": os.environ.get("K8S_TAG_FUNCTION", "k8s_cluster"),
+}
 
 # Default group
 default_group = "k8s_cluster"
@@ -14,7 +19,7 @@ default_group = "k8s_cluster"
 ssh_user = "ubuntu"
 ansible_params = "-o StrictHostKeyChecking=no"
 
-def get_instances_by_tags(tags, region="eu-north-1"):
+def get_instances_by_tags(tags, region=os.environ.get("K8S_TAG_REGION", "eu-west-3")):
     ec2 = boto3.client("ec2", region_name=region)
 
     filters = [{"Name": "instance-state-name", "Values": ["running"]}]
@@ -29,7 +34,7 @@ def get_instances_by_tags(tags, region="eu-north-1"):
             public_ip = instance.get("PublicIpAddress")
             private_ip = instance.get("PrivateIpAddress")
             public_dns = instance.get("PublicDnsName")
-            if not public_ip or not private_ip or not public_dns:
+            if not private_ip:
                 continue
 
             tags_dict = {tag["Key"]: tag["Value"] for tag in instance.get("Tags", [])}
@@ -37,8 +42,9 @@ def get_instances_by_tags(tags, region="eu-north-1"):
             role = tags_dict.get("Role")
             instances.append({
                 "name": name,
-                "ip": public_ip,
+                "ip": public_ip or private_ip,
                 "private_ip": private_ip,
+                "public_ip": public_ip,
                 "public_dns": public_dns,
                 "role": role,
             })
@@ -59,17 +65,34 @@ def build_inventory(instances):
         }
     }
 
+    # Private-only hosts (e.g. workers behind the NAT) are reached by SSH-jumping through the master
+    master_public_ip = next(
+        (inst["public_ip"] for inst in instances if inst["role"] == "k8s_master" and inst["public_ip"]),
+        None,
+    )
+
     for inst in instances:
-        ip = inst["ip"]
+        host = inst["ip"]
         role = inst["role"]
 
-        inventory[default_group]["hosts"].append(ip)
-        inventory["_meta"]["hostvars"][ip] = {}
+        inventory[default_group]["hosts"].append(host)
+        hostvars = {}
+
+        if not inst["public_ip"] and master_public_ip:
+            # ControlMaster/ControlPersist multiplexing gets confused by a reboot on the far
+            # side of a ProxyJump (stale control socket -> "Connection closed by UNKNOWN port
+            # 65535"), so disable it for proxied hosts.
+            hostvars["ansible_ssh_common_args"] = (
+                f"{ansible_params} -o ProxyJump={ssh_user}@{master_public_ip}"
+                f" -o ControlMaster=no -o ControlPersist=no"
+            )
+
+        inventory["_meta"]["hostvars"][host] = hostvars
 
         if role:
             if role not in inventory:
                 inventory[role] = {"hosts": []}
-            inventory[role]["hosts"].append(ip)
+            inventory[role]["hosts"].append(host)
 
     return inventory
 
@@ -78,8 +101,8 @@ def show_endpoints(instances):
     for inst in instances:
         name = inst["name"]
         private_ip = inst["private_ip"]
-        public_ip = inst["ip"]
-        url = inst["public_dns"]
+        public_ip = inst["public_ip"] or "N/A"
+        url = inst["public_dns"] or "N/A"
         print(f"{name}, {private_ip}, {public_ip}, {url}")
 
 if __name__ == "__main__":
