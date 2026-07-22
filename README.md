@@ -3,46 +3,46 @@ Idea: I love idea of managing kubernetes cluster myself. It's much cheaper and d
 
 This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 instances vusingia OpenTofu (or terraform) and ansible. Also, cluster is deployed in private VPC, making it mode secure. Public connections are routed via AWS LoadBalancers.
 
+## Architecture
 
-# Architecture:
-`
-┌─────────────────────────────────────────────────────────────────────┐
-│                              INTERNET                               │
-└───────────┬────────────────────────────────────────┬────────────────┘
-            │ :6443, 22 (admin access)               │ :80 (Public access) 
-            ▼                                        ▼
-┌──────────────────────────────────────────--─────────────────────────────┐
-│  VPC 10.0.0.0/16  (eu-west-3)                                           │
-│                                                                         │
-│  ┌────────────────────── Public subnets (2 AZ) ───────────────────────┐ │
-│  │                                                                    │ │
-│  │   ┌─────────────────┐          ┌──────────────────────-──────┐     │ │
-│  │   │   k8s_master    │          │       ALB  (k8s-alb)        │     │ │
-│  │   │  SG: 22, 6443   │          │   SG: 80  (0.0.0.0/0)       │     │ │
-│  │   │  public IP      │          │   path routing:             │     │ │
-│  │   │  control-plane  │          │    /grafana* -> tg-grafana  │     │ │
-│  │   │  SSH jump host  │          │    /app*     -> tg-app      │     │ │
-│  │   └────────┬────────┘          └──────────────┬──────────────┘     │ │
-│  │            │                                  │                    │ │
-│  │      ┌─────┴─────┐                            │ NodePort           │ │
-│  │      │ NAT GW+EIP│                            │ (30300 / 30080)    │ │
-│  │      └─────┬─────┘                            │                    │ │
-│  └────────────┼──────────────────────────────────┼────────────────────┘ │
-│               │ egress only                      │                      │
-│  ┌────────────┼──────── Private subnets (2 AZ) ──┼─────────────────────┐│
-│  │            ▼                                  ▼                     ││
-│  │    ┌────────────────┐               ┌────────────────┐              ││
-│  │    │  k8s_worker-0  │               │  k8s_worker-1  │              ││
-│  │    │ SG: NodePort   │               │ SG: NodePort   │              ││
-│  │    │ from ALB only  │               │ from ALB only  │              ││
-│  │    │ no public IP   │               │ no public IP   │              ││
-│  │    └────────────────┘               └────────────────┘              ││
-│  │            ▲ SSH via ProxyJump through master (Ansible only)        ││
-│  └─────────────────────────────────────────────────────────────────────┘│
-└─────────────────────────────────────────────────────────────────────────┘
-`
-
-Why? It's sandbox, used for testing infra and new features. It simulates real cluster. Private network secures cluster from internet. Using ALB allows usage of cloud features as well manage public resources access. Admin access should be limited, ofcourse.
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                              INTERNET                                  │
+└───────────┬─────────────────────────────────────┬──────────────────────┘
+            │ :6443, 22 (admin access)            │ :80 (Public access)
+            ▼                                     ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│  VPC 10.0.0.0/16  (eu-west-3)                                          │
+│                                                                        │
+│  ┌────────────────────── Public subnets (2 AZ) ──────────────────────┐ │
+│  │                                                                   │ │
+│  │   ┌─────────────────┐          ┌────────────────────────────┐     │ │
+│  │   │   k8s_master    │          │       ALB  (k8s-alb)       │     │ │
+│  │   │  SG: 22, 6443   │          │   SG: 80  (0.0.0.0/0)      │     │ │
+│  │   │  public IP      │          │   path routing:            │     │ │
+│  │   │  control-plane  │          │   /grafana* -> tg-grafana  │     │ │
+│  │   │  SSH jump host  │          │   /app*     -> tg-app      │     │ │
+│  │   └────────┬────────┘          └──────────────┬─────────────┘     │ │
+│  │            │                                  │                   │ │
+│  │      ┌─────┴─────┐                            │ NodePort          │ │
+│  │      │ NAT GW+EIP│                            │ (30300 / 30080)   │ │
+│  │      └─────┬─────┘                            │                   │ │
+│  └────────────┼──────────────────────────────────┼───────────────────┘ │
+│               │ egress only                      │                     │
+│  ┌────────────┼───────── Private subnets (2 AZ) ─┼────────────────────┐│
+│  │            ▼                                   ▼                   ││
+│  │    ┌────────────────┐               ┌────────────────┐             ││
+│  │    │  k8s_worker-0  │               │  k8s_worker-1  │             ││
+│  │    │ SG: NodePort   │               │ SG: NodePort   │             ││
+│  │    │ from ALB only  │               │ from ALB only  │             ││
+│  │    │ no public IP   │               │ no public IP   │             ││
+│  │    └────────────────┘               └────────────────┘             ││
+│  │            ▲ SSH via ProxyJump through master (Ansible only)       ││
+│  └────────────────────────────────────────────────────────────────────┘│
+└────────────────────────────────────────────────────────────────────────┘
+```
+Why? It's sandbox. It used for testing infra and new features. It simulates real cluster. Private network secures cluster from internet. Using ALB allows usage of cloud features as well manage public resources access. Admin access should be limited, ofcourse. 
+Master node should also be in private VPC.
 
 
 ## Setup
