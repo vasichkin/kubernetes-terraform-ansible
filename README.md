@@ -5,6 +5,7 @@ This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 in
 
 
 # Architecture:
+`
 ┌─────────────────────────────────────────────────────────────────────┐
 │                              INTERNET                               │
 └───────────┬────────────────────────────────────────┬────────────────┘
@@ -39,6 +40,7 @@ This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 in
 │  │            ▲ SSH via ProxyJump through master (Ansible only)        ││
 │  └─────────────────────────────────────────────────────────────────────┘│
 └─────────────────────────────────────────────────────────────────────────┘
+`
 
 Why? It's sandbox, used for testing infra and new features. It simulates real cluster. Private network secures cluster from internet. Using ALB allows usage of cloud features as well manage public resources access. Admin access should be limited, ofcourse.
 
