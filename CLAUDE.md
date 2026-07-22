@@ -8,7 +8,7 @@ Provisions a self-managed Kubernetes cluster (kubeadm, 1 master + N workers) on 
 
 ## Commands
 
-All OpenTofu commands run from `terraform-infra/`; all Ansible commands run from the repo root.
+All OpenTofu commands run from `terraform-infra/`; all Ansible commands run from the repo root. `dynamic_inventory.py` requires `boto3` — if it's not importable by whatever `python3` is first on `PATH`, activate the project venv first (`source .venv/bin/activate`; create it with `python3 -m venv .venv && .venv/bin/pip install boto3` if missing) before any `ansible`/`ansible-playbook` command below.
 
 ```bash
 # Provision AWS infra

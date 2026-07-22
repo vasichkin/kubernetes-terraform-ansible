@@ -4,8 +4,14 @@ Prerequisites:
 `opentofu (tofu)
 adsible
 python3
-boto3
 aws congifure`
+
+`dynamic_inventory.py` needs `boto3`. If your `python3` is a Homebrew/system install, `pip install boto3` will likely fail with "externally-managed-environment" — use a venv instead:
+```
+python3 -m venv .venv
+.venv/bin/pip install boto3
+source .venv/bin/activate   # do this before any ansible/ansible-playbook command below
+```
 
 # Setup infra
 

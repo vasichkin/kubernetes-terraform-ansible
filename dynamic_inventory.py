@@ -2,10 +2,15 @@
 
 import boto3
 import json
+import os
 import sys
 
-# Tag filter for selecting relevant EC2 instances
-k8s_deployment_tag = {"Project": "capstone", "Function": "k8s_cluster"}
+# Tag filter for selecting relevant EC2 instances. Must match tags.Project/tags.Function in
+# terraform.tfvars - override with K8S_TAG_PROJECT/K8S_TAG_FUNCTION if tfvars diverges from these defaults.
+k8s_deployment_tag = {
+    "Project": os.environ.get("K8S_TAG_PROJECT", "Experiment_kuber"),
+    "Function": os.environ.get("K8S_TAG_FUNCTION", "k8s_cluster"),
+}
 
 # Default group
 default_group = "k8s_cluster"
@@ -14,7 +19,7 @@ default_group = "k8s_cluster"
 ssh_user = "ubuntu"
 ansible_params = "-o StrictHostKeyChecking=no"
 
-def get_instances_by_tags(tags, region="eu-west-3"):
+def get_instances_by_tags(tags, region=os.environ.get("K8S_TAG_REGION", "eu-west-3")):
     ec2 = boto3.client("ec2", region_name=region)
 
     filters = [{"Name": "instance-state-name", "Values": ["running"]}]
@@ -74,8 +79,12 @@ def build_inventory(instances):
         hostvars = {}
 
         if not inst["public_ip"] and master_public_ip:
+            # ControlMaster/ControlPersist multiplexing gets confused by a reboot on the far
+            # side of a ProxyJump (stale control socket -> "Connection closed by UNKNOWN port
+            # 65535"), so disable it for proxied hosts.
             hostvars["ansible_ssh_common_args"] = (
                 f"{ansible_params} -o ProxyJump={ssh_user}@{master_public_ip}"
+                f" -o ControlMaster=no -o ControlPersist=no"
             )
 
         inventory["_meta"]["hostvars"][host] = hostvars

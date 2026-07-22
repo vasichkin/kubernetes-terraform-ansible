@@ -2,6 +2,7 @@
 .terraform/
 kubeconfigs/
 __pycache__/
+.venv/
 
 # .tfstate files
 *.tfstate
