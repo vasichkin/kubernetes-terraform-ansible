@@ -1,19 +1,23 @@
-aws_access_key           = "AWS_ACCESS_KEY"
-aws_secret_key           = "AWS_SECRET_KEY"
 aws_region               = "eu-north-1"
-aws_s3_bucket            = "capstone-terraform-state"
 azs                      = ["eu-north-1b", "eu-north-1c"]
 vpc_cidr_block           = "10.0.0.0/16"
 private_subnets          = ["10.0.1.0/24", "10.0.2.0/24"]
 public_subnets           = ["10.0.3.0/24", "10.0.4.0/24"]
 
 image_name               = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04*"
-# Ubuntu Server 22.04 LTS (HVM), SSD Volume Type
-image_ami                = "ami-04542995864e26699"
+# Ubuntu Server 22.04 LTS (HVM), SSD Volume Type; latest matching AMI is resolved via data.aws_ami
 k8s_master_instance_type = "t3.medium"
 k8s_worker_instance_count = 2
 k8s_worker_instance_type = "t3.medium"
-ports                    = ["22", "80", "6443", "30001", "30002", "30080", "30300"]
+
+# Master-only ports (SSH + Kubernetes API); worker app ports are exposed via the ALB below, not this list
+ports = [22, 6443]
+
+# ALB path-based routing: URL path pattern -> backend NodePort on the workers
+alb_path_routes = {
+  "/grafana*" = 30300
+  "/app*"     = 30080
+}
 
 tags = {
   Owner    = "OWNER"
