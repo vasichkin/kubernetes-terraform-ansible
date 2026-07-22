@@ -1,5 +1,5 @@
-aws_region               = "eu-north-1"
-azs                      = ["eu-north-1b", "eu-north-1c"]
+aws_region               = "eu-west-3"
+azs                      = ["eu-west-3b", "eu-west-3c"]
 vpc_cidr_block           = "10.0.0.0/16"
 private_subnets          = ["10.0.1.0/24", "10.0.2.0/24"]
 public_subnets           = ["10.0.3.0/24", "10.0.4.0/24"]
@@ -9,6 +9,10 @@ image_name               = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04*"
 k8s_master_instance_type = "t3.medium"
 k8s_worker_instance_count = 2
 k8s_worker_instance_type = "t3.medium"
+
+# Optional: some accounts only permit IAM role creation with a specific permissions boundary attached.
+# If `tofu apply` fails with "not authorized to perform: iam:CreateRole", set this to that boundary's ARN.
+# permissions_boundary_arn = "arn:aws:iam::<account-id>:policy/DefaultBoundaryPolicy"
 
 # Master-only ports (SSH + Kubernetes API); worker app ports are exposed via the ALB below, not this list
 ports = [22, 6443]

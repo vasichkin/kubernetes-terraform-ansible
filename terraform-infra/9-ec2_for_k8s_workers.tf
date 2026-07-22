@@ -11,7 +11,7 @@ resource "aws_instance" "k8s_worker" {
   tags = merge(
     var.tags,
     {
-      Name = "k8s_worker",
+      Name = "k8s_worker-${count.index}",
       Role = "k8s_worker"
     }
   )

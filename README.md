@@ -15,8 +15,8 @@ In folder `terraform-infra`:
 1. Create  terraform.tfvars:
 
 ```
-aws_region               = "eu-north-1"
-azs                      = ["eu-north-1b", "eu-north-1c"]
+aws_region               = "eu-west-3"
+azs                      = ["eu-west-3b", "eu-west-3c"]
 vpc_cidr_block           = "10.0.0.0/16"
 private_subnets          = ["10.0.1.0/24", "10.0.2.0/24"]
 public_subnets           = ["10.0.3.0/24", "10.0.4.0/24"]
@@ -47,8 +47,8 @@ tags = {
 ```
 aws s3api create-bucket \
   --bucket capstone-terraform-state \
-  --region eu-north-1 \
-  --create-bucket-configuration LocationConstraint=eu-north-1
+  --region eu-west-3 \
+  --create-bucket-configuration LocationConstraint=eu-west-3
 
 aws s3api put-bucket-versioning \
   --bucket capstone-terraform-state \
@@ -59,7 +59,7 @@ aws s3api put-bucket-versioning \
 
 ```
 bucket = "capstone-terraform-state"
-region = "eu-north-1"
+region = "eu-west-3"
 ```
 
 4. Provision infra. Ssh key will be placed from ~/.ssh/id_rsa.pub

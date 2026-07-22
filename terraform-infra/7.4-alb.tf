@@ -19,7 +19,7 @@ resource "aws_security_group" "alb" {
     ipv6_cidr_blocks = ["::/0"]
   }
 
-  tags = merge(var.tags, { Name = "${var.env}-alb-sg" })
+  tags = merge(var.tags, { Name = "${var.env}-alb-sg", Role = "security" })
 }
 
 resource "aws_lb" "this" {
@@ -29,14 +29,19 @@ resource "aws_lb" "this" {
   security_groups    = [aws_security_group.alb.id]
   subnets            = aws_subnet.public[*].id
 
-  tags = merge(var.tags, { Name = "${var.env}-alb" })
+  tags = merge(var.tags, { Name = "${var.env}-alb", Role = "load-balancer" })
+}
+
+# Path patterns like "/app*" contain characters AWS tag values reject; slug them for use in names/tags
+locals {
+  route_slugs = { for path_key in keys(var.alb_path_routes) : path_key => replace(replace(path_key, "/", ""), "*", "") }
 }
 
 # One target group per configured path route, pointing at the worker NodePort
 resource "aws_lb_target_group" "app" {
   for_each = var.alb_path_routes
 
-  name     = substr("tg-${replace(replace(each.key, "/", ""), "*", "")}", 0, 32)
+  name     = substr("tg-${local.route_slugs[each.key]}", 0, 32)
   port     = each.value
   protocol = "HTTP"
   vpc_id   = aws_vpc.this.id
@@ -49,7 +54,7 @@ resource "aws_lb_target_group" "app" {
     unhealthy_threshold = 5
   }
 
-  tags = merge(var.tags, { Name = "${var.env}-tg-${each.key}" })
+  tags = merge(var.tags, { Name = "${var.env}-tg-${local.route_slugs[each.key]}", Role = "load-balancer" })
 }
 
 # Register every worker instance with every path route's target group on its NodePort
@@ -87,6 +92,8 @@ resource "aws_lb_listener" "http" {
       status_code  = "404"
     }
   }
+
+  tags = merge(var.tags, { Name = "${var.env}-alb-listener-http", Role = "load-balancer" })
 }
 
 resource "aws_lb_listener_rule" "path_routes" {
@@ -105,4 +112,6 @@ resource "aws_lb_listener_rule" "path_routes" {
       values = [each.key]
     }
   }
+
+  tags = merge(var.tags, { Name = "${var.env}-alb-rule-${local.route_slugs[each.key]}", Role = "load-balancer" })
 }

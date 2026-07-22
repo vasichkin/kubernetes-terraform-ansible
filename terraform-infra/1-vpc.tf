@@ -8,6 +8,7 @@ resource "aws_vpc" "this" {
     var.tags,
     {
       Name = "${var.env}-main"
+      Role = "networking"
     }
   )
 }
@@ -15,11 +16,12 @@ resource "aws_vpc" "this" {
 resource "aws_vpc_endpoint" "s3" {
   vpc_id       = aws_vpc.this.id
   service_name = "com.amazonaws.${var.aws_region}.s3"
-    
+
   tags = merge(
     var.tags,
     {
       Name = "${var.env}-vpce-s3"
+      Role = "networking"
     }
   )
 }

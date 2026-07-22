@@ -11,7 +11,6 @@ variable "aws_region" {
 variable "vpc_cidr_block" {
   description = "CIDR (Classless Inter-Domain Routing)."
   type        = string
-  default     = "10.0.0.0/16"
 }
 
 variable "azs" {
@@ -43,6 +42,12 @@ variable "ports" {
   description = "Master-only ports (SSH, Kubernetes API). Worker app ports are exposed via the ALB, see alb_path_routes."
   type        = list(number)
   default     = [22, 6443]
+}
+
+variable "permissions_boundary_arn" {
+  description = "Optional IAM permissions boundary ARN to attach to the EC2 instance role. Leave null unless your account requires one."
+  type        = string
+  default     = null
 }
 
 variable "alb_path_routes" {

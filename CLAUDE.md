@@ -67,7 +67,7 @@ There is no test suite, linter, or CI config in this repo — validate OpenTofu 
 
 ## Notes
 
-- Assumes AWS region `eu-north-1` and Ubuntu 22.04 AMI images; changing region requires updating `terraform.tfvars` and re-checking the hardcoded `checkip.amazonaws.com`/nslookup flow still resolves correctly.
+- Assumes AWS region `eu-west-3` and Ubuntu 22.04 AMI images; changing region requires updating `terraform.tfvars` (and `backend.hcl`'s region only if you also move the state bucket — see below) and re-checking the hardcoded `checkip.amazonaws.com`/nslookup flow still resolves correctly.
 - `var.ports` (default `[22, 6443]`) is master-only and opens to `0.0.0.0/0` — treat edits as security-relevant. Worker app exposure is controlled entirely by `var.alb_path_routes`, not `ports`.
 - The ALB (`7.4-alb.tf`) is HTTP-only (port 80, no TLS) — add an HTTPS listener + ACM cert if you need TLS termination.
 - Moving/replacing worker instances (subnet change, AMI refresh, etc.) forces EC2 replacement (`subnet_id` is not updatable in place) — the replaced worker will need `ansible-playbooks/workers.yml` re-run to rejoin the cluster.

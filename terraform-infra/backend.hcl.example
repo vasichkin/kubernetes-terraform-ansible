@@ -1,2 +1,2 @@
 bucket = "terraform-state-bucket"
-region = "eu-north-1"
+region = "eu-west-3"

@@ -27,7 +27,7 @@ resource "aws_security_group" "master" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-  tags = merge(var.tags, { Name = "${var.env}-master-sg" })
+  tags = merge(var.tags, { Name = "${var.env}-master-sg", Role = "security" })
 }
 
 # Worker security group: NodePort app traffic only from the ALB; SSH/anything else only from inside the VPC
@@ -59,5 +59,5 @@ resource "aws_security_group" "worker" {
     cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
-  tags = merge(var.tags, { Name = "${var.env}-worker-sg" })
+  tags = merge(var.tags, { Name = "${var.env}-worker-sg", Role = "security" })
 }

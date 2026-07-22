@@ -1,11 +1,11 @@
   resource "aws_iam_role" "ec2_instance_role" {
   name = "ec2-instance_role"
-  # Boundary required in my case. Remove if not required
-  permissions_boundary = "arn:aws:iam::418272767424:policy/DefaultBoundaryPolicy"
+  permissions_boundary = var.permissions_boundary_arn
   tags = merge(
     var.tags,
     {
       Name = "${var.env}-instance-role"
+      Role = "iam"
     }
   )
   assume_role_policy = jsonencode({
@@ -34,6 +34,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
     var.tags,
     {
       Name = "${var.env}-instance-profile"
+      Role = "iam"
     }
   )
 }

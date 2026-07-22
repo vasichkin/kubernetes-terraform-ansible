@@ -5,6 +5,7 @@ resource "aws_eip" "this" {
     var.tags,
     {
       Name = "${var.env}-nat"
+      Role = "networking"
     }
   )
 }
@@ -16,6 +17,7 @@ resource "aws_nat_gateway" "this" {
     var.tags,
     {
       Name = "${var.env}-nat"
+      Role = "networking"
     }
   )
 

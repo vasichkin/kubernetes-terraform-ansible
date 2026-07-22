@@ -14,7 +14,7 @@ default_group = "k8s_cluster"
 ssh_user = "ubuntu"
 ansible_params = "-o StrictHostKeyChecking=no"
 
-def get_instances_by_tags(tags, region="eu-north-1"):
+def get_instances_by_tags(tags, region="eu-west-3"):
     ec2 = boto3.client("ec2", region_name=region)
 
     filters = [{"Name": "instance-state-name", "Values": ["running"]}]
