@@ -1,7 +1,7 @@
 ## Self-managed kubernetes deployment in mixed environment
-Idea: I love idea of managing kubernetes cluster myself. It's much cheaper and don't have limitations EKS has. Also, I believe beiung cloud-agnostic is important feature in kubernetes wolrd. So, this project is implementation of kubernetes setup in mixed environmet. I'm trying to get the best out of both worlds (cloud and kuber)
+Idea: I love idea of managing kubernetes cluster myself. It's much cheaper and don't have limitations EKS has. Also, I believe being cloud-agnostic is important feature in kubernetes wolrd. So, this project is implementation of kubernetes setup in mixed environmet. I'm trying to get the best out of both worlds (cloud and kuber)
 
-This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 instances vusingia OpenTofu (or terraform) and ansible. Also, cluster is deployed in private VPC, making it mode secure. Public connections are routed via AWS LoadBalancers.
+This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 instances using OpenTofu (or terraform) and ansible. Also, cluster is deployed in private VPC, making it mode secure. Public connections are routed via AWS LoadBalancers.
 
 ## Architecture
 
@@ -59,7 +59,7 @@ python3 -m venv .venv
 source .venv/bin/activate   # do this before any ansible/ansible-playbook command below
 ```
 
-# Setup infra
+# Setup AWS infra
 
 AWS credentials are picked up from your system (`aws configure`, `AWS_PROFILE`, or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` env vars) — they are not stored in this project.
 

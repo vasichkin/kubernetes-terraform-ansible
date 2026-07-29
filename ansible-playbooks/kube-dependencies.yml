@@ -75,14 +75,14 @@
 
     - name: add Kubernetes apt-key
       get_url:
-        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
+        url: https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key
         dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
         mode: '0644'
         force: true
 
     - name: add Kubernetes' APT repository
       apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /"
         state: present
         update_cache: yes
 
@@ -114,13 +114,13 @@
 
     - name: install Kubelet
       apt:
-        name: kubelet=1.29.*
+        name: kubelet=1.36.*
         state: present
         update_cache: true
 
     - name: install Kubeadm
       apt:
-        name: kubeadm=1.29.*
+        name: kubeadm=1.36.*
         state: present
 
     - name: enable the Kubelet service, and enable it persistently
@@ -162,6 +162,6 @@
   tasks:
     - name: install Kubectl
       apt:
-        name: kubectl=1.29.*
+        name: kubectl=1.36.*
         state: present
         force: yes # allow downgrades

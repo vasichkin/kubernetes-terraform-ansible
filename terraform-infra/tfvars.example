@@ -25,6 +25,6 @@ alb_path_routes = {
 
 tags = {
   Owner    = "OWNER"
-  Project  = "capstone"
+  Project  = "Experiment_kuber"
   Function = "k8s_cluster"
 }
