@@ -1,7 +1,7 @@
 ## Self-managed kubernetes deployment in mixed environment
-Idea: I love idea of managing kubernetes cluster myself. It's much cheaper and don't have limitations EKS has. Also, I believe being cloud-agnostic is important feature in kubernetes world. So, this project is implementation of kubernetes setup in mixed environmet. I'm trying to get the best out of both worlds (cloud and kuber)
+Idea: I love idea of managing kubernetes cluster myself. It's much cheaper and don't have limitations EKS has. Also, I believe being cloud-agnostic is important feature in kubernetes wolrd. So, this project is implementation of kubernetes setup in mixed environmet. I'm trying to get the best out of both worlds (cloud and kuber)
 
-This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 instances vusingia OpenTofu (or terraform) and ansible. Also, cluster is deployed in private VPC, making it mode secure. Public connections are routed via AWS LoadBalancers.
+This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 instances using OpenTofu (or terraform) and ansible. Also, cluster is deployed in private VPC, making it mode secure. Public connections are routed via AWS LoadBalancers.
 
 ## Architecture
 
@@ -42,7 +42,7 @@ This project deploys self-managed (via kubeadm) kubernetes cluster to AWS EC2 in
 └────────────────────────────────────────────────────────────────────────┘
 ```
 Why? It's sandbox. It used for testing infra and new features. It simulates real cluster. Private network secures cluster from internet. Using ALB allows usage of cloud features as well manage public resources access. Admin access should be limited, ofcourse. 
-Important! Master node should also be in private VPC! This setup is just sandbox, and to minimise cost, jump-host and master node are same node.
+Master node should also be in private VPC.
 
 
 ## Setup
@@ -59,7 +59,7 @@ python3 -m venv .venv
 source .venv/bin/activate   # do this before any ansible/ansible-playbook command below
 ```
 
-# Setup infra
+# Setup AWS infra
 
 AWS credentials are picked up from your system (`aws configure`, `AWS_PROFILE`, or `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` env vars) — they are not stored in this project.
 
@@ -89,7 +89,7 @@ alb_path_routes = {
 # Tags to be set on all resources created
 tags = {
   Owner    = "Username"
-  Project  = "Experiment_kuber"
+  Project  = "KuberCluster"
   Function = "k8s_cluster"
 }
 ```
@@ -131,18 +131,9 @@ In project root folder:
 2. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/kube-dependencies.yml`
 3. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/master.yml`
 4. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/workers.yml`
-5. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/roles.yml`
 6. `ansible-playbook -i dynamic_inventory.py ansible-playbooks/fetch_config.yml`
 7. Check cluster accessible `kubectl --kubeconfig kubeconfigs/config get nodes`
 8. Copy kubeconfigs/config to ~/.kube/config and you are done.
-
-
-# Upgrade an existing cluster
-Rolling upgrade from v1.29 to v1.36, one kubeadm minor version at a time (control plane first, then workers one at a time):
-```
-ansible-playbook -i dynamic_inventory.py ansible-playbooks/upgrade-cluster.yml
-```
-Safe to re-run if interrupted — each version hop is idempotent.
 
 
 # Delete
