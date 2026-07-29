@@ -1,0 +1,143 @@
+# One kubeadm minor-version hop, applied to the whole cluster.
+# Expects `kube_version` (e.g. "1.30") to be passed in via `vars:` by the
+# importing playbook. Not meant to be run standalone — see upgrade-cluster.yml.
+
+- hosts: k8s_master
+  become: yes
+  tasks:
+    - name: Sanity-check the cluster is starting from v1.29 before the first hop
+      command: dpkg-query -W -f='${Version}' kubeadm
+      register: kubeadm_current_version
+      changed_when: false
+      when: kube_version == "1.30"
+
+    - name: Fail if control plane is not on v1.29.x
+      assert:
+        that: "kubeadm_current_version.stdout is match('1.29\\..*')"
+        fail_msg: >-
+          Control plane kubeadm version is {{ kubeadm_current_version.stdout }},
+          not 1.29.x. This playbook only encodes the 1.29 -> 1.36 upgrade path;
+          re-check the cluster's current version before proceeding.
+      when: kube_version == "1.30"
+
+    - name: Add Kubernetes apt-key for v{{ kube_version }}
+      get_url:
+        url: "https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/Release.key"
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: '0644'
+        force: true
+
+    - name: Point Kubernetes apt repository at v{{ kube_version }}
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/ /"
+        state: present
+        update_cache: yes
+
+    - name: Install kubeadm {{ kube_version }}.*
+      apt:
+        name: "kubeadm={{ kube_version }}.*"
+        state: present
+
+    - name: Read the installed kubeadm version
+      command: kubeadm version -o short
+      register: kubeadm_installed_version
+      changed_when: false
+
+    - name: Show kubeadm upgrade plan
+      command: kubeadm upgrade plan
+      register: master_upgrade_plan
+      changed_when: false
+
+    - name: Apply kubeadm upgrade to {{ kube_version }}
+      shell: "kubeadm upgrade apply {{ kubeadm_installed_version.stdout }} -y >> master_upgraded_{{ kube_version }}.log"
+      args:
+        chdir: /home/ubuntu
+        creates: "master_upgraded_{{ kube_version }}.log"
+
+    - name: Look up this node's Kubernetes node name
+      become_user: ubuntu
+      shell: >-
+        kubectl get nodes -o json |
+        jq -r '.items[] | select(.status.addresses[]?.address=="{{ ansible_default_ipv4.address }}") | .metadata.name'
+      register: master_node_name
+      changed_when: false
+
+    - name: Drain the master node
+      become_user: ubuntu
+      command: "kubectl drain {{ master_node_name.stdout }} --ignore-daemonsets --delete-emptydir-data"
+
+    - name: Install kubelet/kubectl {{ kube_version }}.*
+      apt:
+        name:
+          - "kubelet={{ kube_version }}.*"
+          - "kubectl={{ kube_version }}.*"
+        state: present
+        force: yes # allow downgrades, matches kube-dependencies.yml's kubectl install
+
+    - name: Reload systemd and restart kubelet
+      systemd:
+        name: kubelet
+        daemon_reload: yes
+        state: restarted
+
+    - name: Uncordon the master node
+      become_user: ubuntu
+      command: "kubectl uncordon {{ master_node_name.stdout }}"
+
+- hosts: k8s_worker
+  become: yes
+  serial: 1
+  tasks:
+    - name: Look up this node's Kubernetes node name
+      shell: >-
+        kubectl get nodes -o json |
+        jq -r '.items[] | select(.status.addresses[]?.address=="{{ ansible_default_ipv4.address }}") | .metadata.name'
+      register: worker_node_name
+      changed_when: false
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      become_user: ubuntu
+
+    - name: Drain the worker node
+      command: "kubectl drain {{ worker_node_name.stdout }} --ignore-daemonsets --delete-emptydir-data"
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      become_user: ubuntu
+
+    - name: Add Kubernetes apt-key for v{{ kube_version }}
+      get_url:
+        url: "https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/Release.key"
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: '0644'
+        force: true
+
+    - name: Point Kubernetes apt repository at v{{ kube_version }}
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v{{ kube_version }}/deb/ /"
+        state: present
+        update_cache: yes
+
+    - name: Install kubeadm {{ kube_version }}.*
+      apt:
+        name: "kubeadm={{ kube_version }}.*"
+        state: present
+
+    - name: Upgrade the node's kubelet config
+      shell: "kubeadm upgrade node >> worker_upgraded_{{ kube_version }}.log"
+      args:
+        chdir: /home/ubuntu
+        creates: "worker_upgraded_{{ kube_version }}.log"
+
+    - name: Install kubelet {{ kube_version }}.*
+      apt:
+        name: "kubelet={{ kube_version }}.*"
+        state: present
+
+    - name: Reload systemd and restart kubelet
+      systemd:
+        name: kubelet
+        daemon_reload: yes
+        state: restarted
+
+    - name: Uncordon the worker node
+      command: "kubectl uncordon {{ worker_node_name.stdout }}"
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      become_user: ubuntu

@@ -43,13 +43,15 @@
         path: /etc/kubernetes/kubeadm-config.yaml
         block: |
              kind: ClusterConfiguration
-             apiVersion: kubeadm.k8s.io/v1beta3
+             apiVersion: kubeadm.k8s.io/v1beta4
+             # To be able to add loadbalancer later
+             controlPlaneEndpoint: "{{ public_ip.stdout }}"
              networking:
                podSubnet: "10.244.0.0/16"
-               # To be able to add loadbalancer later
-               control-plane-endpoint: {{ public_ip.stdout }} {{ public_dns }}
              apiServer:
-               allow-privileged: true
+               extraArgs:
+                 - name: allow-privileged
+                   value: "true"
                certSANs:
                  - 127.0.0.1
                  - {{ public_ip.stdout }}

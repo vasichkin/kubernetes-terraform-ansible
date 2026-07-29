@@ -44,3 +44,8 @@ override.tf.json
 terraform.rc
 
 *.backup
+
+# Rosetta
+agents/TEMP/
+refsrc/
+!refsrc/INDEX.md
