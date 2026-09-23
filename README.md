@@ -136,6 +136,10 @@ In project root folder:
 8. Copy kubeconfigs/config to ~/.kube/config and you are done.
 
 
+# Get updated cubeconfig (IP changes if nodes where stopped_
+`ansible-playbook -i dynamic_inventory.py ansible-playbooks/fetch_config.yml`
+
+
 # Delete
 `tofu destroy`
 

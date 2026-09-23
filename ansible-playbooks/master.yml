@@ -44,8 +44,11 @@
         block: |
              kind: ClusterConfiguration
              apiVersion: kubeadm.k8s.io/v1beta4
-             # To be able to add loadbalancer later
-             controlPlaneEndpoint: "{{ public_ip.stdout }}"
+             # Private IP is stable across stop/start (unlike the public IP, which
+             # is reassigned on every restart without an Elastic IP). Workers and
+             # the control plane reach each other over the VPC, so joins/kubelet
+             # heartbeats keep working even after the public IP changes.
+             controlPlaneEndpoint: "{{ ansible_default_ipv4.address }}"
              networking:
                podSubnet: "10.244.0.0/16"
              apiServer:
@@ -54,6 +57,7 @@
                    value: "true"
                certSANs:
                  - 127.0.0.1
+                 - {{ ansible_default_ipv4.address }}
                  - {{ public_ip.stdout }}
                  - {{ public_dns }}
                  - your.domain.here
