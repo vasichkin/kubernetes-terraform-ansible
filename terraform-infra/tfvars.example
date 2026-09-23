@@ -1,4 +1,8 @@
 aws_region               = "eu-west-3"
+# Optional: pin the AWS CLI/SDK profile the provider uses instead of relying on
+# the ambient AWS_PROFILE env var / default profile. Must match a profile in
+# ~/.aws/credentials or ~/.aws/config.
+# aws_profile             = "gd-experiments"
 azs                      = ["eu-west-3b", "eu-west-3c"]
 vpc_cidr_block           = "10.0.0.0/16"
 private_subnets          = ["10.0.1.0/24", "10.0.2.0/24"]

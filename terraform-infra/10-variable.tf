@@ -8,6 +8,11 @@ variable "tags" {
 variable "aws_region" {
   type = string
 }
+variable "aws_profile" {
+  description = "AWS CLI/SDK profile the aws provider should use. Leave null to fall back to the ambient credential chain (AWS_PROFILE env var, default profile, etc.)."
+  type        = string
+  default     = null
+}
 variable "vpc_cidr_block" {
   description = "CIDR (Classless Inter-Domain Routing)."
   type        = string
